@@ -1,2 +1,2 @@
 # ml-walkscore-model
- A ML model to predict and analyse walk scores in places.
+ An ML model to predict and analyze walk scores in places. There is also a script to generate feature data.
