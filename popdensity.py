@@ -3,6 +3,7 @@ from urllib.parse import urlencode
 import aiohttp
 import asyncio
 
+API_KEY = "046fb55b77651b85fa665c605e7c35b7d89905ce"
 
 async def fetch_with_retries(url, params, retries=10, delay=3):
     for attempt in range(retries):
@@ -29,7 +30,8 @@ async def get_geoid(coords: tuple[float, float]):
         "benchmark": "Public_AR_Current",
         "vintage": "Current_Current",
         "layers": "8",
-        "format": "json"
+        "format": "json",
+        "key": API_KEY,
     }
 
     async with aiohttp.ClientSession() as session:
@@ -37,10 +39,10 @@ async def get_geoid(coords: tuple[float, float]):
             try:
                 data = await fetch_with_retries(url, params)
                 gid = data["result"]["geographies"]["Census Tracts"][0]["GEOID"]
-                print(f"GEOID: {gid} for {coords} successfully retrieved from {url}?{urlencode(params)}")
+                print(f"GEOID: {gid} of {coords} successfully retrieved from {url}?{urlencode(params)}")
                 return gid
             except TypeError:
-                print(f"ERROR getting GEOID for Coords: {coords}")
+                print(f"ERROR getting GEOID of Coords: {coords}")
                 return None
 
 
@@ -49,17 +51,18 @@ async def get_tract_population(gid):
     url = "https://api.census.gov/data/2023/acs/acs5"
     params = {
         "get": "B01003_001E",  # Total population variable
-        "ucgid": f"1400000US{gid}"
+        "ucgid": f"1400000US{gid}",
+        "key": API_KEY,
     }
     async with aiohttp.ClientSession() as session:
         async with session.get(url, params=params) as response:
             try:
                 data = await response.json()
                 pop =  int(data[1][0])
-                print(f"Pop: {pop} for GID: {gid} successfully retrieved from {url}?{urlencode(params)}")
+                print(f"Pop: {pop} of GID: {gid} successfully retrieved from {url}?{urlencode(params)}")
                 return pop
             except (KeyError, IndexError, ValueError, TypeError):
-                print(f"ERROR getting population for GEOID: {gid} from {url}?{urlencode(params)}")
+                print(f"ERROR getting population of GEOID: {gid} from {url}?{urlencode(params)}")
                 return None
 
 
@@ -68,17 +71,18 @@ async def get_tract_land(gid):
     url = "https://api.census.gov/data/2023/geoinfo"
     params = {
         "get": "AREALAND_SQMI",
-        "ucgid": f"1400000US{gid}"
+        "ucgid": f"1400000US{gid}",
+        "key": API_KEY,
     }
     async with aiohttp.ClientSession() as session:
         async with session.get(url, params=params) as response:
             try:
                 data = await response.json()
                 land = float(data[1][0])
-                print(f"Land: {land} for GID: {gid} successfully retrieved from {url}?{urlencode(params)}")
+                print(f"Land: {land} of GID: {gid} successfully retrieved from {url}?{urlencode(params)}")
                 return land
             except TypeError:
-                print(f"ERROR getting land area for GEOID: {gid} from {url}?{urlencode(params)}")
+                print(f"ERROR getting land area of GEOID: {gid} from {url}?{urlencode(params)}")
                 return None
 
 
