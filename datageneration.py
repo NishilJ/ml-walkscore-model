@@ -5,15 +5,15 @@ import geopandas as gpd
 from shapely.geometry import Point
 
 import logging
+
 logging.basicConfig(level=logging.DEBUG)
 
 from popdensity import get_pop_density
 from walkscore import get_walk_score
 from osmfeatures import get_osm_feature_densities
 
-
-total_examples = 10 # Total amount of coord data points to generate
-radius = 1000 # Find OSM features in a radius (meters) around each coord
+total_examples = 10  # Total amount of coord data points to generate
+radius = 1000  # Find OSM features in a radius (meters) around each coord
 file_path = "data.csv"
 
 nyc_boundary = gpd.read_file("boundaries/nyc/columbia_nycp_2000_blocks.shp")
@@ -22,7 +22,7 @@ nyc_boundary = gpd.read_file("boundaries/nyc/columbia_nycp_2000_blocks.shp")
 
 async def get_random_us_coord():
     while True:
-        lat = random.uniform(40.4, 41.2) # NYC bounding coords
+        lat = random.uniform(40.4, 41.2)  # NYC bounding coords
         lon = random.uniform(-74.4, -73.5)
         #lat = random.uniform(32.5, 33.3) # DFW bounding coords
         #lon = random.uniform(-97.9, -96.4)
@@ -32,6 +32,7 @@ async def get_random_us_coord():
         point = Point(lon, lat)
         if nyc_boundary.geometry.contains(point).any():
             return round(lat, 4), round(lon, 4)
+
 
 async def main():
     header = ['Lat', 'Lon', 'Pop Density', 'Intersections', 'Pedways', 'Bikeways', 'POIs', 'Transit', 'WalkScore']
@@ -43,7 +44,7 @@ async def main():
     print("Calculating population densities...")
     pop_densities = await asyncio.gather(*[get_pop_density(coords) for coords in coords_list])
 
-     # Get new coord if 0 pop density
+    # Get new coord if 0 pop density
     for i in range(len(coords_list)):
         while pop_densities[i] == 0:
             print(f"Population density for {coords_list[i]} is zero, generating a new coordinate...")
@@ -55,9 +56,6 @@ async def main():
     walkscore_list = await asyncio.gather(*[get_walk_score(coords) for coords in coords_list])
     print("Calculating WalkScores: SUCCESS")
 
-    print("Calculating OSM feature densities...")
-    #osm_features_list = await asyncio.gather(*[get_osm_feature_densities(coords, radius) for coords in coords_list])
-
     with open(file_path, mode='a', newline='') as f:
         writer = csv.writer(f, delimiter=',')
         if f.tell() == 0:
@@ -67,16 +65,18 @@ async def main():
             osm_features = get_osm_feature_densities(coords, radius)
             walkscore = walkscore_list[i]
             row = [coords[0], coords[1], pop_density,
-                        osm_features['intersections'],
-                        osm_features['pedways'],
-                        osm_features['bikeways'],
-                        osm_features['pois'],
-                        osm_features['transit_stops'],
-                        walkscore]
+                   osm_features['intersections'],
+                   osm_features['pedways'],
+                   osm_features['bikeways'],
+                   osm_features['pois'],
+                   osm_features['transit_stops'],
+                   walkscore]
             writer.writerow(row)
             f.flush()
+            print(f"#{i + 1} {coords} data written to {file_path}.")
     print("Calculating OSM feature densities: SUCCESS")
     print(f"Data generation complete at {file_path}.")
+
 
 if __name__ == "__main__":
     asyncio.run(main())

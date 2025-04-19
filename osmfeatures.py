@@ -2,11 +2,6 @@ import osmnx as ox
 import numpy as np
 import pandas as pd
 from geopandas import GeoDataFrame
-import asyncio
-import time
-import aiohttp
-import requests
-
 
 def get_osm_data(coords: tuple[float, float], radius: int, tags: dict):
     """
@@ -22,8 +17,9 @@ def get_osm_data(coords: tuple[float, float], radius: int, tags: dict):
     """
     try:
         return ox.features.features_from_point(coords, dist=radius, tags=tags)
-    except:
-        return {}
+    except Exception as e:
+        print(f"Error fetching OSM data: {e}")
+        return GeoDataFrame()
 
 
 def calculate_density(gdf : pd.DataFrame, radius: int) :
@@ -37,7 +33,7 @@ def calculate_density(gdf : pd.DataFrame, radius: int) :
     Returns:
         float: Density of features per square kilometer.
     """
-    if gdf is None or radius == 0:
+    if gdf is None or gdf.empty or radius == 0:
         return 0.00
     return round(len(gdf) * 1e6 / (np.pi * radius**2), 2)
 
@@ -78,4 +74,3 @@ def get_osm_feature_densities(coords: tuple[float, float], radius: int):
 #print(asyncio.run(get_osm_feature_densities((40.7128, -74.0060), 1000)))
 #response = requests.get("https://overpass-api.de/api/status")
 #print(response.text)
-
