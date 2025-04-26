@@ -17,9 +17,10 @@ FILE_PATH = f"data/{BOUNDARY_NAME}.csv" # Which file to add the data entries to,
 BOUNDARIES = {
     "usa": gpd.read_file("boundaries/usa/ne_110m_admin_0_countries.shp").query("ADMIN == 'United States of America'"),
     "nyc": gpd.read_file("boundaries/new_york_city/new_york_city.shp"),
+    "chicago": gpd.read_file("boundaries/chicago/chicago.shp"),
     "la": gpd.read_file("boundaries/los_angeles/los_angeles.shp"),
     "atlanta": gpd.read_file("boundaries/atlanta/atlanta.shp"),
-    "chicago": gpd.read_file("boundaries/chicago/chicago.shp"),
+    "houston": gpd.read_file("boundaries/houston/houston.shp"),
     "dallas": gpd.read_file("boundaries/dallas/dallas.shp")
 }
 
