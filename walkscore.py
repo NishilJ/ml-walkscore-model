@@ -19,6 +19,6 @@ async def get_walk_score(coords: tuple[float, float]):
                 wscore = data["walkscore"]
                 #print(f"WalkScore: {wscore} for {coords} successfully retrieved from {url}?{urlencode(params)}")
                 return wscore
-            except:
-                print(f"No WalkScore for : {coords} from {url}?{urlencode(params)}")
+            except Exception as e:
+                print(f"No WalkScore for {coords} from {url}?{urlencode(params)}, {e}")
                 return None

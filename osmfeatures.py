@@ -6,7 +6,6 @@ from concurrent.futures import ProcessPoolExecutor, TimeoutError
 from io import StringIO
 import geopandas as gpd
 
-
 ox.settings.log_console = True
 
 
@@ -98,14 +97,3 @@ def get_osm_feature_densities(coords: tuple[float, float], radius: float):
         densities[feature] = calculate_density(gdf, radius)
     print(f"OSM feature densities successfully calculated at {coords}...")
     return densities
-
-
-# coords = (lat, long)
-#coords4 = (40.7128, -74.0060)  # New York City
-#coords1 = (33.0786, -96.7047)  # Home Plano
-#coords2 = (42.3563, -71.0588)
-#coords3 = (33.360763, -100.110555)
-#coords_list = [coords1]
-#print(asyncio.run(get_osm_feature_densities((40.7128, -74.0060), 1000)))
-#response = requests.get("https://overpass-api.de/api/status")
-#print(response.text)

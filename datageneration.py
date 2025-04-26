@@ -9,6 +9,11 @@ from walkscore import get_walk_score
 from osmfeatures import get_osm_feature_densities
 
 
+# IMPORTANT PARAMETERS
+BOUNDARY_NAME = "atlanta" # Boundary to generate data in
+TOTAL_EXAMPLES = 250  # Total amount of data points to generate
+RADIUS = 0.5  # Find OSM features in a radius (miles) around each coord
+FILE_PATH = f"data/{BOUNDARY_NAME}.csv" # Which file to add the data entries to, creates a new file if it doesn't exist
 BOUNDARIES = {
     "usa": gpd.read_file("boundaries/usa/ne_110m_admin_0_countries.shp").query("ADMIN == 'United States of America'"),
     "nyc": gpd.read_file("boundaries/new_york_city/new_york_city.shp"),
@@ -17,12 +22,6 @@ BOUNDARIES = {
     "chicago": gpd.read_file("boundaries/chicago/chicago.shp"),
     "dallas": gpd.read_file("boundaries/dallas/dallas.shp")
 }
-
-# IMPORTANT PARAMETERS
-BOUNDARY_NAME = "atlanta" # Boundary to generate data in
-TOTAL_EXAMPLES = 250  # Total amount of data points to generate
-RADIUS = 0.5  # Find OSM features in a radius (miles) around each coord
-FILE_PATH = f"data/{BOUNDARY_NAME}.csv" # Which file to add the data entries to, creates a new file if it doesn't exist
 
 
 async def get_random_us_coord():
@@ -39,8 +38,6 @@ async def get_random_us_coord():
 
 
 async def main():
-    header = ['Lat', 'Lon', 'Pop Density', 'Intersections', 'Pedways', 'Bikeways', 'POIs', 'Transit', 'WalkScore']
-
     print("Generating coordinates...")
     coords_list = await asyncio.gather(*[get_random_us_coord() for _ in range(TOTAL_EXAMPLES)])
     print("Generating coordinates: SUCCESS")
@@ -54,6 +51,7 @@ async def main():
     print("Calculating WalkScores: SUCCESS")
 
     # Get new coord and data if pop density = 0
+    print("Validating features...")
     ws_retry_counter = 0
     for i in range(len(coords_list)):
         while pop_densities[i] == 0 or pop_densities[i] is None or walkscore_list[i] is None:
@@ -61,15 +59,16 @@ async def main():
             coords_list[i] = await get_random_us_coord()
             pop_densities[i] = await get_pop_density(coords_list[i])
 
-            # Only proceed to get walkscore if population density is valid
+            # Only proceed to get a walkscore if population density is valid
             if pop_densities[i] != 0 and pop_densities[i] is not None:
                 walkscore_list[i] = await get_walk_score(coords_list[i])
                 ws_retry_counter += 1
-    print(f"Calculating population densities: SUCCESS, WS RETRIES: {ws_retry_counter}")
+    print(f"Validating features: SUCCESS, WS RETRIES: {ws_retry_counter}")
 
     with open(FILE_PATH, mode='a', newline='') as f:
         writer = csv.writer(f, delimiter=',')
         if f.tell() == 0:
+            header = ['Lat', 'Lon', 'Pop Density', 'Intersections', 'Pedways', 'Bikeways', 'POIs', 'Transit', 'WalkScore']
             writer.writerow(header)
         for i, coords in enumerate(coords_list):
             pop_density = pop_densities[i]
