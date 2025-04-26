@@ -14,7 +14,7 @@ def fetch_osm_as_geojson(coords, radius, tags):
     """
     Fetch osm data and return as GeoJSON + CRS.
     """
-    gdf = ox.features.features_from_point(coords, dist=radius, tags=tags)
+    gdf = ox.features.features_from_point(coords, dist=radius*1609.344, tags=tags)
     return gdf.to_json(), gdf.crs.to_string() if gdf.crs else None
 
 
@@ -25,7 +25,7 @@ def get_osm_data(coords, radius, tags, retries=4, timeout=8):
 
     Args:
         coords (tuple): Latitude and longitude of the center point.
-        radius (int): Radius in meters around the center point.
+        radius (float): Radius in miles around the center point.
         tags (dict): OSM tags to filter data (ex. {'amenity': True}).
         retries (int): Number of times to retry getting data.
         timeout (int): Timeout for getting data.
@@ -56,23 +56,23 @@ def get_osm_data(coords, radius, tags, retries=4, timeout=8):
     return gpd.GeoDataFrame()
 
 
-def calculate_density(gdf : pd.DataFrame, radius: int) :
+def calculate_density(gdf : pd.DataFrame, radius: float) :
     """
-    Calculate the density of features per square kilometer.
+    Calculate the density of features per square mile.
 
     Args:
         gdf (GeoDataFrame): GeoDataFrame containing the features.
-        radius (int): Radius in meters around the center point.
+        radius (float): Radius in miles around the center point.
 
     Returns:
-        float: Density of features per square kilometer.
+        float: Density of features per square mile.
     """
     if gdf is None or gdf.empty or radius == 0:
         return 0.00
-    return round(len(gdf) * 1e6 / (np.pi * radius**2), 2)
+    return round(len(gdf) / (np.pi * radius**2), 2)
 
 
-def get_osm_feature_densities(coords: tuple[float, float], radius: int):
+def get_osm_feature_densities(coords: tuple[float, float], radius: float):
     tags = {
         'highway': ['footway', 'cycleway', 'crossing', 'stop', 'traffic_signals'],
         'amenity': True,

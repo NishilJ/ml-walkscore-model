@@ -6,21 +6,21 @@ from shapely.geometry import Point
 
 from popdensity import get_pop_density
 from walkscore import get_walk_score
-from osmfeatures1 import get_osm_feature_densities
+from osmfeatures import get_osm_feature_densities
 
 
 BOUNDARIES = {
-    "us": gpd.read_file("boundaries/united_states/ne_110m_admin_0_countries.shp").query("ADMIN == 'United States of America'"),
+    "usa": gpd.read_file("boundaries/usa/ne_110m_admin_0_countries.shp").query("ADMIN == 'United States of America'"),
     "nyc": gpd.read_file("boundaries/new_york_city/new_york_city.shp"),
     "la": gpd.read_file("boundaries/los_angeles/los_angeles.shp"),
+    "chicago": gpd.read_file("boundaries/chicago/chicago.shp"),
     "dallas": gpd.read_file("boundaries/dallas/dallas.shp")
 }
 
 # IMPORTANT PARAMETERS
-TRAIN = True # Whether to generate train data (with label) or test data (no label)
 BOUNDARY_NAME = "la" # Boundary to generate data in
 TOTAL_EXAMPLES = 50  # Total amount of data points to generate
-RADIUS = 1000  # Find OSM features in a radius (meters) around each coord
+RADIUS = 0.5  # Find OSM features in a radius (miles) around each coord
 FILE_PATH = f"{BOUNDARY_NAME}.csv" # Which file to add the data entries to, creates a new file if it doesn't exist
 
 
@@ -56,7 +56,7 @@ async def main():
     ws_retry_counter = 0
     for i in range(len(coords_list)):
         while pop_densities[i] == 0 or pop_densities[i] is None or walkscore_list[i] is None:
-            print(f"Population density for {coords_list[i]} is zero, generating a new coordinate and data...")
+            print(f"Population density is zero or WalkScore is null for {coords_list[i]}, generating a new coordinate and data...")
             coords_list[i] = await get_random_us_coord()
             pop_densities[i] = await get_pop_density(coords_list[i])
 
