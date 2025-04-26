@@ -2,24 +2,58 @@ import osmnx as ox
 import numpy as np
 import pandas as pd
 from geopandas import GeoDataFrame
+from concurrent.futures import ProcessPoolExecutor, TimeoutError
+from io import StringIO
+import geopandas as gpd
 
-def get_osm_data(coords: tuple[float, float], radius: int, tags: dict):
+
+ox.settings.log_console = True
+
+
+def fetch_osm_as_geojson(coords, radius, tags):
     """
-    Fetch OpenStreetMap data for a given coordinate and radius.
+    Fetch osm data and return as GeoJSON + CRS.
+    """
+    gdf = ox.features.features_from_point(coords, dist=radius, tags=tags)
+    return gdf.to_json(), gdf.crs.to_string() if gdf.crs else None
+
+
+def get_osm_data(coords, radius, tags, retries=4, timeout=8):
+    """
+    Get OSM data for a given coordinate and radius.
+    Has timeout handling using multiprocessing.
 
     Args:
         coords (tuple): Latitude and longitude of the center point.
         radius (int): Radius in meters around the center point.
         tags (dict): OSM tags to filter data (ex. {'amenity': True}).
+        retries (int): Number of times to retry getting data.
+        timeout (int): Timeout for getting data.
 
     Returns:
         GeoDataFrame: OSM data within the specified area.
     """
-    try:
-        return ox.features.features_from_point(coords, dist=radius, tags=tags)
-    except Exception as e:
-        print(f"Error fetching OSM data: {e}")
-        return GeoDataFrame()
+    for attempt in range(retries):
+        print(f"Attempt {attempt + 1} to fetch OSM data...")
+
+        with ProcessPoolExecutor(max_workers=1) as executor:
+            future = executor.submit(fetch_osm_as_geojson, coords, radius, tags)
+            try:
+                json_data, crs = future.result(timeout=timeout)
+                gdf = gpd.read_file(StringIO(json_data))
+                if crs:
+                    gdf.set_crs(crs, inplace=True)
+                if not gdf.empty:
+                    return gdf
+                else:
+                    print("Empty GeoDataFrame returned.")
+            except TimeoutError:
+                print(f"Timeout on attempt {attempt + 1}. Retrying...")
+            except Exception as e:
+                print(f"Error on attempt {attempt + 1}: {e}")
+
+    print("All attempts failed. Returning empty GeoDataFrame.")
+    return gpd.GeoDataFrame()
 
 
 def calculate_density(gdf : pd.DataFrame, radius: int) :
@@ -36,6 +70,7 @@ def calculate_density(gdf : pd.DataFrame, radius: int) :
     if gdf is None or gdf.empty or radius == 0:
         return 0.00
     return round(len(gdf) * 1e6 / (np.pi * radius**2), 2)
+
 
 def get_osm_feature_densities(coords: tuple[float, float], radius: int):
     tags = {

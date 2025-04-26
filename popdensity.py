@@ -39,9 +39,9 @@ async def get_geoid(coords: tuple[float, float]):
             try:
                 data = await fetch_with_retries(url, params)
                 gid = data["result"]["geographies"]["Census Tracts"][0]["GEOID"]
-                print(f"GEOID: {gid} of {coords} successfully retrieved from {url}?{urlencode(params)}")
+                #print(f"GEOID: {gid} of {coords} successfully retrieved from {url}?{urlencode(params)}")
                 return gid
-            except TypeError:
+            except (KeyError, IndexError, ValueError, TypeError):
                 print(f"ERROR getting GEOID of Coords: {coords}")
                 return None
 
@@ -59,7 +59,7 @@ async def get_tract_population(gid):
             try:
                 data = await response.json()
                 pop =  int(data[1][0])
-                print(f"Pop: {pop} of GID: {gid} successfully retrieved from {url}?{urlencode(params)}")
+                #print(f"Pop: {pop} of GID: {gid} successfully retrieved from {url}?{urlencode(params)}")
                 return pop
             except (KeyError, IndexError, ValueError, TypeError):
                 print(f"ERROR getting population of GEOID: {gid} from {url}?{urlencode(params)}")
@@ -79,9 +79,9 @@ async def get_tract_land(gid):
             try:
                 data = await response.json()
                 land = float(data[1][0])
-                print(f"Land: {land} of GID: {gid} successfully retrieved from {url}?{urlencode(params)}")
+                #print(f"Land: {land} of GID: {gid} successfully retrieved from {url}?{urlencode(params)}")
                 return land
-            except TypeError:
+            except (KeyError, IndexError, ValueError, TypeError):
                 print(f"ERROR getting land area of GEOID: {gid} from {url}?{urlencode(params)}")
                 return None
 

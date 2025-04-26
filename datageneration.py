@@ -4,65 +4,75 @@ import random
 import geopandas as gpd
 from shapely.geometry import Point
 
-import logging
-
-logging.basicConfig(level=logging.DEBUG)
-
 from popdensity import get_pop_density
 from walkscore import get_walk_score
-from osmfeatures import get_osm_feature_densities
+from osmfeatures1 import get_osm_feature_densities
 
-total_examples = 10  # Total amount of coord data points to generate
-radius = 1000  # Find OSM features in a radius (meters) around each coord
-file_path = "data.csv"
 
-nyc_boundary = gpd.read_file("boundaries/nyc/columbia_nycp_2000_blocks.shp")
-#us_boundary = gpd.read_file("boundaries/us/ne_110m_admin_0_countries.shp")
-#us_boundary = us_boundary[us_boundary['ADMIN'] == 'United States of America']
+BOUNDARIES = {
+    "us": gpd.read_file("boundaries/united_states/ne_110m_admin_0_countries.shp").query("ADMIN == 'United States of America'"),
+    "nyc": gpd.read_file("boundaries/new_york_city/new_york_city.shp"),
+    "la": gpd.read_file("boundaries/los_angeles/los_angeles.shp"),
+    "dallas": gpd.read_file("boundaries/dallas/dallas.shp")
+}
+
+# IMPORTANT PARAMETERS
+TRAIN = True # Whether to generate train data (with label) or test data (no label)
+BOUNDARY_NAME = "la" # Boundary to generate data in
+TOTAL_EXAMPLES = 50  # Total amount of data points to generate
+RADIUS = 1000  # Find OSM features in a radius (meters) around each coord
+FILE_PATH = f"{BOUNDARY_NAME}.csv" # Which file to add the data entries to, creates a new file if it doesn't exist
+
 
 async def get_random_us_coord():
-    while True:
-        lat = random.uniform(40.4, 41.2)  # NYC bounding coords
-        lon = random.uniform(-74.4, -73.5)
-        #lat = random.uniform(32.5, 33.3) # DFW bounding coords
-        #lon = random.uniform(-97.9, -96.4)
-        #lat = random.uniform(24.5212, 49.3828) # U.S. bounding coords
-        #lon = random.uniform(-124.7363, -66.9454)
+    if BOUNDARY_NAME not in BOUNDARIES:
+        raise ValueError(f"Unsupported region: {BOUNDARY_NAME}")
+    boundary = BOUNDARIES[BOUNDARY_NAME].to_crs(epsg=4326)
+    polygon = boundary.union_all()
+    minx, miny, maxx, maxy = polygon.bounds
 
-        point = Point(lon, lat)
-        if nyc_boundary.geometry.contains(point).any():
-            return round(lat, 4), round(lon, 4)
+    while True:
+        random_point = Point(random.uniform(minx, maxx), random.uniform(miny, maxy))
+        if polygon.contains(random_point):
+            return round(random_point.y, 4), round(random_point.x, 4)
 
 
 async def main():
     header = ['Lat', 'Lon', 'Pop Density', 'Intersections', 'Pedways', 'Bikeways', 'POIs', 'Transit', 'WalkScore']
 
     print("Generating coordinates...")
-    coords_list = await asyncio.gather(*[get_random_us_coord() for _ in range(total_examples)])
+    coords_list = await asyncio.gather(*[get_random_us_coord() for _ in range(TOTAL_EXAMPLES)])
     print("Generating coordinates: SUCCESS")
 
     print("Calculating population densities...")
     pop_densities = await asyncio.gather(*[get_pop_density(coords) for coords in coords_list])
-
-    # Get new coord if 0 pop density
-    for i in range(len(coords_list)):
-        while pop_densities[i] == 0:
-            print(f"Population density for {coords_list[i]} is zero, generating a new coordinate...")
-            coords_list[i] = await get_random_us_coord()
-            pop_densities[i] = await get_pop_density(coords_list[i])
     print("Calculating population densities: SUCCESS")
 
     print("Calculating WalkScores...")
     walkscore_list = await asyncio.gather(*[get_walk_score(coords) for coords in coords_list])
     print("Calculating WalkScores: SUCCESS")
 
-    with open(file_path, mode='a', newline='') as f:
+    # Get new coord and data if pop density = 0
+    ws_retry_counter = 0
+    for i in range(len(coords_list)):
+        while pop_densities[i] == 0 or pop_densities[i] is None or walkscore_list[i] is None:
+            print(f"Population density for {coords_list[i]} is zero, generating a new coordinate and data...")
+            coords_list[i] = await get_random_us_coord()
+            pop_densities[i] = await get_pop_density(coords_list[i])
+
+            # Only proceed to get walkscore if population density is valid
+            if pop_densities[i] != 0 and pop_densities[i] is not None:
+                walkscore_list[i] = await get_walk_score(coords_list[i])
+                ws_retry_counter += 1
+    print(f"Calculating population densities: SUCCESS, WS RETRIES: {ws_retry_counter}")
+
+    with open(FILE_PATH, mode='a', newline='') as f:
         writer = csv.writer(f, delimiter=',')
         if f.tell() == 0:
             writer.writerow(header)
         for i, coords in enumerate(coords_list):
             pop_density = pop_densities[i]
-            osm_features = get_osm_feature_densities(coords, radius)
+            osm_features = get_osm_feature_densities(coords, RADIUS)
             walkscore = walkscore_list[i]
             row = [coords[0], coords[1], pop_density,
                    osm_features['intersections'],
@@ -73,9 +83,9 @@ async def main():
                    walkscore]
             writer.writerow(row)
             f.flush()
-            print(f"#{i + 1} {coords} data written to {file_path}.")
+            print(f"#{i + 1} {coords} data written to {FILE_PATH}.")
     print("Calculating OSM feature densities: SUCCESS")
-    print(f"Data generation complete at {file_path}.")
+    print(f"Data generation complete at {FILE_PATH}.")
 
 
 if __name__ == "__main__":
