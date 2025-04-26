@@ -10,12 +10,11 @@ from osmfeatures import get_osm_feature_densities
 
 
 # IMPORTANT PARAMETERS
-BOUNDARY_NAME = "dallas" # Boundary to generate data in
+BOUNDARY_NAME = "la" # Boundary to generate data in
 TOTAL_EXAMPLES = 250  # Total amount of data points to generate
 RADIUS = 0.5  # Find OSM features in a radius (miles) around each coord
 FILE_PATH = f"data/{BOUNDARY_NAME}.csv" # Which file to add the data entries to, creates a new file if it doesn't exist
 BOUNDARIES = {
-    "usa": gpd.read_file("boundaries/usa/ne_110m_admin_0_countries.shp").query("ADMIN == 'United States of America'"),
     "nyc": gpd.read_file("boundaries/new_york_city/new_york_city.shp"),
     "chicago": gpd.read_file("boundaries/chicago/chicago.shp"),
     "la": gpd.read_file("boundaries/los_angeles/los_angeles.shp"),
