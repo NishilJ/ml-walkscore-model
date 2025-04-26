@@ -17,7 +17,7 @@ async def get_walk_score(coords: tuple[float, float]):
             try:
                 data = await response.json()
                 wscore = data["walkscore"]
-                print(f"WalkScore: {wscore} for {coords} successfully retrieved from {url}?{urlencode(params)}")
+                #print(f"WalkScore: {wscore} for {coords} successfully retrieved from {url}?{urlencode(params)}")
                 return wscore
             except:
                 print(f"No WalkScore for : {coords} from {url}?{urlencode(params)}")
