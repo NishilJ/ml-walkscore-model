@@ -42,10 +42,8 @@ def get_osm_data(coords, radius, tags, retries=4, timeout=8):
                 gdf = gpd.read_file(StringIO(json_data))
                 if crs:
                     gdf.set_crs(crs, inplace=True)
-                if not gdf.empty:
-                    return gdf
-                else:
-                    print("Empty GeoDataFrame returned.")
+                return gdf
+
             except TimeoutError:
                 print(f"Timeout on attempt {attempt + 1}. Retrying...")
             except Exception as e:
