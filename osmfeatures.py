@@ -1,10 +1,10 @@
-import osmnx as ox
+from concurrent.futures import ProcessPoolExecutor
+from io import StringIO
 import numpy as np
 import pandas as pd
-from geopandas import GeoDataFrame
-from concurrent.futures import ProcessPoolExecutor, TimeoutError
-from io import StringIO
 import geopandas as gpd
+import osmnx as ox
+
 
 ox.settings.log_console = True
 
@@ -13,7 +13,7 @@ def fetch_osm_as_geojson(coords, radius, tags):
     """
     Fetch osm data and return as GeoJSON + CRS.
     """
-    gdf = ox.features.features_from_point(coords, dist=radius*1609.344, tags=tags)
+    gdf = ox.features.features_from_point(coords, dist=radius * 1609.344, tags=tags)
     return gdf.to_json(), gdf.crs.to_string() if gdf.crs else None
 
 
@@ -53,7 +53,7 @@ def get_osm_data(coords, radius, tags, retries=4, timeout=8):
     return gpd.GeoDataFrame()
 
 
-def calculate_density(gdf : pd.DataFrame, radius: float) :
+def calculate_density(gdf: pd.DataFrame, radius: float):
     """
     Calculate the density of features per square mile.
 
@@ -65,8 +65,8 @@ def calculate_density(gdf : pd.DataFrame, radius: float) :
         float: Density of features per square mile.
     """
     if gdf is None or gdf.empty or radius == 0:
-        return 0.00
-    return round(len(gdf) / (np.pi * radius**2), 2)
+        return 0
+    return round(len(gdf) / (np.pi * radius ** 2), 2)
 
 
 def get_osm_feature_densities(coords: tuple[float, float], radius: float):
@@ -79,15 +79,19 @@ def get_osm_feature_densities(coords: tuple[float, float], radius: float):
     print(f"Retrieving OSM feature data at {coords}...")
     feature_data = get_osm_data(coords, radius, tags)
     features = {
-        'intersections': feature_data[feature_data['highway'].isin(['stop', 'traffic_signals'])] if 'highway' in feature_data else None,
-        'pedways': feature_data[feature_data['highway'].isin(['footway', 'crossing'])] if 'highway' in feature_data else None,
+        'intersections': feature_data[
+            feature_data['highway'].isin(['stop', 'traffic_signals'])] if 'highway' in feature_data else None,
+        'pedways': feature_data[
+            feature_data['highway'].isin(['footway', 'crossing'])] if 'highway' in feature_data else None,
         'bikeways':
-                pd.concat([
-                    feature_data[feature_data['highway'].isin(['cycleway'])] if 'highway' in feature_data else pd.DataFrame(),
-                    feature_data[feature_data['cycleway'].notna()] if 'cycleway' in feature_data else pd.DataFrame()
-                ], ignore_index=True),
+            pd.concat([
+                feature_data[
+                    feature_data['highway'].isin(['cycleway'])] if 'highway' in feature_data else pd.DataFrame(),
+                feature_data[feature_data['cycleway'].notna()] if 'cycleway' in feature_data else pd.DataFrame()
+            ], ignore_index=True),
         'pois': feature_data[feature_data['amenity'].notna()] if 'amenity' in feature_data else None,
-        'transit_stops': feature_data[feature_data['public_transport'].notna()] if 'public_transport' in feature_data else None,
+        'transit_stops': feature_data[
+            feature_data['public_transport'].notna()] if 'public_transport' in feature_data else None,
     }
 
     densities = {}
