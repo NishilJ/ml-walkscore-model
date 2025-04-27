@@ -19,6 +19,7 @@ BOUNDARIES = {
     "chicago": gpd.read_file("boundaries/chicago/chicago.shp"),
     "la": gpd.read_file("boundaries/los_angeles/los_angeles.shp"),
     "atlanta": gpd.read_file("boundaries/atlanta/atlanta.shp"),
+    "sa": gpd.read_file("boundaries/san_antonio/san_antonio.shp"),
     "houston": gpd.read_file("boundaries/houston/houston.shp"),
     "dallas": gpd.read_file("boundaries/dallas/dallas.shp")
 }
