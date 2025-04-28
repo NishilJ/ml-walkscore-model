@@ -10,19 +10,19 @@ from osmfeatures import get_osm_feature_densities
 
 
 # IMPORTANT PARAMETERS
-BOUNDARY_NAME = "austin"  # Boundary to generate data in
+BOUNDARY_NAME = "dallas"  # Boundary to generate data in
 TOTAL_EXAMPLES = 500  # Total amount of data points to generate
 RADIUS = 0.5  # Find OSM features in a radius (miles) around each coord
-FILE_PATH = f"data/{BOUNDARY_NAME}.csv"  # Which file to add the data entries to, creates a new file if it doesn't exist
+FILE_PATH = f"../data/{BOUNDARY_NAME}.csv"  # Which file to add the data entries to, creates a new file if it doesn't exist
 BOUNDARIES = {
-    "nyc": gpd.read_file("boundaries/new_york_city/new_york_city.shp"),
-    "chicago": gpd.read_file("boundaries/chicago/chicago.shp"),
-    "la": gpd.read_file("boundaries/los_angeles/los_angeles.shp"),
-    "atlanta": gpd.read_file("boundaries/atlanta/atlanta.shp"),
-    "sa": gpd.read_file("boundaries/san_antonio/san_antonio.shp"),
-    "houston": gpd.read_file("boundaries/houston/houston.shp"),
-    "austin": gpd.read_file("boundaries/austin/austin.shp"),
-    "dallas": gpd.read_file("boundaries/dallas/dallas.shp")
+    "nyc": gpd.read_file("../boundaries/new_york_city/new_york_city.shp"),
+    "chicago": gpd.read_file("../boundaries/chicago/chicago.shp"),
+    "la": gpd.read_file("../boundaries/los_angeles/los_angeles.shp"),
+    "atlanta": gpd.read_file("../boundaries/atlanta/atlanta.shp"),
+    "sa": gpd.read_file("../boundaries/san_antonio/san_antonio.shp"),
+    "houston": gpd.read_file("../boundaries/houston/houston.shp"),
+    "austin": gpd.read_file("../boundaries/austin/austin.shp"),
+    "dallas": gpd.read_file("../boundaries/dallas/dallas.shp")
 }
 
 
