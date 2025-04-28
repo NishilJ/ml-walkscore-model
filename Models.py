@@ -1,6 +1,7 @@
 import pandas as pd
 from sklearn.ensemble import RandomForestRegressor
 from sklearn.tree import DecisionTreeRegressor
+from xgboost import XGBRegressor
 from sklearn.preprocessing import StandardScaler
 from sklearn.metrics import mean_squared_error, mean_absolute_error, r2_score
 import joblib
@@ -94,3 +95,36 @@ for feature, importance in zip(feature_labels, feature_importances_dtr):
 
 joblib.dump(model_dtr, 'DecisionTreeRegressorModel.pkl')
 print("Model saved as DecisionTreeRegressorModel.pkl")
+
+print(50*"-")
+
+# training the XGBoostRegressor
+model_xgb = XGBRegressor(
+    n_estimators=100,
+    learning_rate=0.1,
+    max_depth=2,
+    random_state=42,
+    eval_metric='rmse',
+)
+
+model_xgb.fit(X_train, y_train)
+
+# test prediction
+y_pred = model_xgb.predict(X_test)
+
+mae_xgb = mean_absolute_error(y_test, y_pred)
+mse_xgb = mean_squared_error(y_test, y_pred)
+r2_xgb = r2_score(y_test, y_pred)
+
+print(f"Mean Absolute Error (MAE): {mae_xgb}")
+print(f"Mean Squared Error (MSE): {mse_xgb}")
+print(f"R2 Score: {r2_xgb}\n")
+
+feature_importances_xgb = model_xgb.feature_importances_
+print("Feature Importances:")
+for feature, importance in zip(feature_labels, feature_importances_xgb):
+    print(f"{feature}: {importance:.4f}")
+
+joblib.dump(model_xgb, 'XGBRegressorModel.pkl')
+print("Model saved as XGBRegressorModel.pkl")
+print(50*"-")
