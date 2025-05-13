@@ -17,7 +17,7 @@ def fetch_osm_as_geojson(coords, radius, tags):
     return gdf.to_json(), gdf.crs.to_string() if gdf.crs else None
 
 
-def get_osm_data(coords, radius, tags, retries=3, timeout=6):
+def get_osm_data(coords, radius, tags, retries=3, timeout=8):
     """
     Get OSM data for a given coordinate and radius.
     Has timeout handling using multiprocessing.
