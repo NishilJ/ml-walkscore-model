@@ -20,6 +20,8 @@ models = {
     "XGBoost": (XGBRegressor, "../models/xgboost_best_params.pkl"),
     "Stacking": (StackingRegressor, "../models/stacking_best_params.pkl"),
 }
+trained_models = {}
+
 
 feature_labels = ['Pop Density', 'Intersections', 'Pedways', 'Bikeways', 'POIs', 'Transit']
 target_label = 'WalkScore'
@@ -57,8 +59,28 @@ for model_name, (model_class, param_file) in models.items():
                 X_val = val_data[feature_labels].values
                 y_val = val_data[target_label].values
 
-                model = model_class(**params)
+                if model_name == "Stacking":
+                    rf_model = trained_models.get("Random Forest")
+                    xgb_model = trained_models.get("XGBoost")
+
+                    base_learners = [
+                        ("rf", rf_model),
+                        ("xgb", xgb_model)
+                    ]
+
+                    model = StackingRegressor(
+                        estimators=base_learners,
+                        n_jobs=-1
+                    )
+                else:
+                    model = model_class(**params)
+
                 model.fit(X_train, y_train)
+
+                # Store trained base models to use in stacking
+                if model_name in ["Random Forest", "XGBoost"]:
+                    trained_models[model_name] = model
+
                 y_pred = model.predict(X_val)
                 y_train_pred = model.predict(X_train)
 
@@ -73,7 +95,6 @@ for model_name, (model_class, param_file) in models.items():
                 })
 
     df_results = pd.DataFrame(results)
-    df_results.to_csv(f"{model_name.replace(' ', '_')}_citycount_curve.csv", index=False)
 
     # Print average metrics
     avg_r2 = df_results["val_r2"].mean()
@@ -95,7 +116,7 @@ for model_name, (model_class, param_file) in models.items():
         val_mae_std=("val_mae", "std"),
     )
 
-    # Plot R²
+    # Plot R^2
     plt.figure(figsize=(10, 6))
     for label in ["train_r2", "val_r2"]:
         plt.plot(agg.index, agg[f"{label}_mean"], marker='o', label=f"{label.replace('_', ' ').title()}")
@@ -126,6 +147,7 @@ for model_name, (model_class, param_file) in models.items():
         agg["val_mae_mean"] + agg["val_mae_std"],
         alpha=0.2
     )
+
     plt.title(f"{model_name} MAE vs. Num of Training Cities")
     plt.xlabel("Num of Training Cities")
     plt.ylabel("Mean Absolute Error")
