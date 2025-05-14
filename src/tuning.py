@@ -107,7 +107,6 @@ stack_scores = cross_val_score(
     scoring=make_scorer(r2_score),
     n_jobs=-1
 )
-stack_best_params = stack.get_params(deep=True)
 
 
 print("Decision Tree Best params:", decision_tree_best_params)
@@ -121,4 +120,3 @@ print("Stacking validation score:", stack_scores.mean())
 joblib.dump(decision_tree_best_params, '../models/decision_tree_best_params.pkl')
 joblib.dump(random_forest_best_params, '../models/random_forest_best_params.pkl')
 joblib.dump(xgboost_best_params, '../models/xgboost_best_params.pkl')
-joblib.dump(stack_best_params, '../models/stacking_best_params.pkl')
