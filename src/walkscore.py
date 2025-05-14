@@ -4,7 +4,7 @@ import aiohttp
 API_KEY = "fcb3be41c472b613725aefc8ee8afebf"
 
 async def get_walk_score(coords: tuple[float, float]):
-    """Fetches the WalkScore for a given coordinates."""
+    # Fetches the WalkScore for a given coordinates.
     url = "https://api.walkscore.com/score"
     params = {
         "format": "json",

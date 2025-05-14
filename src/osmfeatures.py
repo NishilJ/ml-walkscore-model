@@ -10,28 +10,13 @@ ox.settings.log_console = True
 
 
 def fetch_osm_as_geojson(coords, radius, tags):
-    """
-    Fetch osm data and return as GeoJSON + CRS.
-    """
+    # Fetch osm data and return as GeoJSON + CRS.
     gdf = ox.features.features_from_point(coords, dist=radius * 1609.344, tags=tags)
     return gdf.to_json(), gdf.crs.to_string() if gdf.crs else None
 
 
 def get_osm_data(coords, radius, tags, retries=3, timeout=8):
-    """
-    Get OSM data for a given coordinate and radius.
-    Has timeout handling using multiprocessing.
-
-    Args:
-        coords (tuple): Latitude and longitude of the center point.
-        radius (float): Radius in miles around the center point.
-        tags (dict): OSM tags to filter data (ex. {'amenity': True}).
-        retries (int): Number of times to retry getting data.
-        timeout (int): Timeout for getting data.
-
-    Returns:
-        GeoDataFrame: OSM data within the specified area.
-    """
+    # Get OSM data for a given coordinate and radius.
     for attempt in range(retries):
         print(f"Attempt {attempt + 1} to fetch OSM data...")
 
@@ -54,16 +39,7 @@ def get_osm_data(coords, radius, tags, retries=3, timeout=8):
 
 
 def calculate_density(gdf: pd.DataFrame, radius: float):
-    """
-    Calculate the density of features per square mile.
-
-    Args:
-        gdf (GeoDataFrame): GeoDataFrame containing the features.
-        radius (float): Radius in miles around the center point.
-
-    Returns:
-        float: Density of features per square mile.
-    """
+    # Calculate the density of features per square mile.
     if gdf is None or gdf.empty or radius == 0:
         return 0
     return round(len(gdf) / (np.pi * radius ** 2), 2)

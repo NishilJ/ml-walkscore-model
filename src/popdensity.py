@@ -47,7 +47,7 @@ async def get_geoid(coords: tuple[float, float]):
 
 
 async def get_tract_population(gid):
-    """Fetches total population for a given Census GEOID using ACS 5-Year Data."""
+    # Fetches total population for a given Census GEOID using ACS 5-Year Data.
     url = "https://api.census.gov/data/2023/acs/acs5"
     params = {
         "get": "B01003_001E",  # Total population variable
@@ -67,7 +67,7 @@ async def get_tract_population(gid):
 
 
 async def get_tract_land(gid):
-    """Fetches the land area in square miles for a given Census tract GEOID."""
+    # Fetches the land area in square miles for a given Census tract GEOID.
     url = "https://api.census.gov/data/2023/geoinfo"
     params = {
         "get": "AREALAND_SQMI",
